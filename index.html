@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Better Prompts</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: #fafaf8;
+      color: #1a1a1a;
+      line-height: 1.6;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* Top bar with mode tabs */
+    .mode-bar {
+      background: #fff;
+      border-bottom: 1px solid #e5e5e0;
+      padding: 20px 40px;
+      display: flex;
+      gap: 32px;
+    }
+
+    .mode-button {
+      background: none;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #999;
+      cursor: pointer;
+      padding: 8px 0;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    
+    .mode-button.active {
+      color: #1a1a1a;
+      border-bottom-color: #2563eb;
+    }
+
+  
+
+    .mode-button:hover {
+      color: #666;
+    }
+
+    .workspace-area {
+      flex: 1;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    /* Left panel */
+    .input-panel {
+      display: flex;
+      flex-direction: column;
+      padding: 40px;
+      border-right: 1px solid #e5e5e0;
+      overflow-y: auto;
+      background: #fafaf8;
+    }
+
+    .panel-header {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 24px;
+    }
+
+    .panel-header h2 {
+      font-family: Georgia, serif;
+      font-size: 20px;
+      font-weight: normal;
+      color: #1a1a1a;
+      letter-spacing: -0.02em;
+    }
+
+    .panel-header p {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .editor-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .editor-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #666;
+    }
+
+    .text-input {
+      background: #fff;
+      border: 1px solid #e5e5e0;
+      border-radius: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #1a1a1a;
+      resize: none;
+      flex: 1;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .text-input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .char-count {
+      font-size: 12px;
+      color: #999;
+      text-align: right;
+    }
+
+    /* Right panel */
+    .output-panel {
+      display: flex;
+      flex-direction: column;
+      padding: 40px;
+      overflow-y: auto;
+      background: #fff;
+    }
+
+    .output-header {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 24px;
+    }
+
+    .output-header h2 {
+      font-family: Georgia, serif;
+      font-size: 20px;
+      font-weight: normal;
+      color: #1a1a1a;
+      letter-spacing: -0.02em;
+    }
+
+    .output-header p {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .output-content {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .output-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .question-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 16px 0;
+      border-bottom: 1px solid #e5e5e0;
+    }
+
+    .question-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #666;
+    }
+
+    .question-text {
+      font-size: 14px;
+      color: #1a1a1a;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    .question-input {
+      background: #fff;
+      border: 1px solid #e5e5e0;
+      border-radius: 0;
+      padding: 12px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .question-input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .option-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .option-button {
+      background: #fff;
+      border: 1px solid #e5e5e0;
+      padding: 12px 16px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 13px;
+      color: #1a1a1a;
+      transition: all 0.2s;
+    }
+
+    .option-button:hover {
+      border-color: #2563eb;
+      background: #f9f9f8;
+    }
+
+    .option-button.selected {
+      background: #2563eb;
+      color: #fff;
+      border-color: #2563eb;
+    }
+
+    .output-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #666;
+    }
+
+    .output-box {
+      background: #f9f9f8;
+      border: 1px solid #e5e5e0;
+      padding: 16px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 14px;
+      color: #1a1a1a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+
+    .feedback-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 12px;
+      background: #f9f9f8;
+      border-left: 3px solid #e5e5e0;
+    }
+
+    .feedback-item.good {
+      border-left-color: #16a34a;
+      background: #f0fdf4;
+    }
+
+    .feedback-item.caution {
+      border-left-color: #dc2626;
+      background: #fef2f2;
+    }
+
+    .feedback-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #666;
+    }
+
+    .feedback-item.good .feedback-label {
+      color: #16a34a;
+    }
+
+    .feedback-item.caution .feedback-label {
+      color: #dc2626;
+    }
+
+    .feedback-text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #1a1a1a;
+    }
+
+    .empty-state {
+      color: #999;
+      font-size: 13px;
+      text-align: center;
+      padding: 32px 0;
+      line-height: 1.6;
+    }
+
+    .copy-button {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 8px;
+      align-self: flex-start;
+    }
+
+    .copy-button:hover {
+      background: #1d4ed8;
+    }
+
+    .copy-button.copied {
+      background: #16a34a;
+    }
+
+    .score {
+      padding: 12px;
+      background: #f9f9f8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .score-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #666;
+    }
+
+    .score-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2563eb;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      height: 100%;
+    }
+
+    /* Hide panels */
+    .panel.hidden {
+      display: none;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #d1d1c8;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a0a099;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Mode selector -->
+    <div class="mode-bar">
+      <button class="mode-button active" data-mode="transform">Transform Idea</button>
+      <button class="mode-button" data-mode="analyze">Analyze Prompt</button>
+    </div>
+
+    <!-- Workspace -->
+    <div class="workspace-area">
+      <!-- Transform Mode -->
+      <div class="panel" id="transform-panel">
+        <div class="input-panel">
+          <div class="panel-header">
+            <h2>Your Idea</h2>
+            <p>Write what you want to ask an AI. Answer the questions to help compose a better prompt.</p>
+          </div>
+          <div class="editor-section">
+            <label class="editor-label">What do you want to ask AI?</label>
+            <textarea
+              id="ideaInput"
+              class="text-input"
+              placeholder="E.g., 'I need to write an email to a client' or 'Help me understand how TCP works'"
+              spellcheck="false"
+            ></textarea>
+            <div class="char-count">
+              <span id="ideaCharCount">0</span> characters
+            </div>
+          </div>
+
+          <div id="questionsContainer" style="margin-top: 24px;"></div>
+        </div>
+
+        <div class="output-panel">
+          <div class="output-header">
+            <h2>Your Prompt</h2>
+            <p>Composed from your answers.</p>
+          </div>
+          <div class="output-content">
+            <div id="transformOutput" class="empty-state">
+              Answer the questions on the left to generate your prompt
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analyze Mode -->
+      <div class="panel hidden" id="analyze-panel">
+        <div class="input-panel">
+          <div class="panel-header">
+            <h2>Your Prompt</h2>
+            <p>Paste an existing prompt to get detailed feedback.</p>
+          </div>
+          <div class="editor-section">
+            <label class="editor-label">Paste your prompt</label>
+            <textarea
+              id="analyzeInput"
+              class="text-input"
+              placeholder="Paste your AI prompt here"
+              spellcheck="false"
+            ></textarea>
+            <div class="char-count">
+              <span id="analyzeCharCount">0</span> characters
+            </div>
+          </div>
+        </div>
+
+        <div class="output-panel">
+          <div class="output-header">
+            <h2>Feedback</h2>
+            <p>Real-time analysis of your prompt quality.</p>
+          </div>
+          <div class="output-content" id="analyzeOutput">
+            <div class="empty-state">
+              Paste a prompt above to see analysis
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const modeButtons = document.querySelectorAll('.mode-button');
+    const panels = document.querySelectorAll('.panel');
+    const ideaInput = document.getElementById('ideaInput');
+    const ideaCharCount = document.getElementById('ideaCharCount');
+    const transformOutput = document.getElementById('transformOutput');
+    const analyzeInput = document.getElementById('analyzeInput');
+    const analyzeCharCount = document.getElementById('analyzeCharCount');
+    const analyzeOutput = document.getElementById('analyzeOutput');
+
+    // Mode switching
+    modeButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const mode = e.target.dataset.mode;
+        modeButtons.forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+
+        panels.forEach(p => p.classList.add('hidden'));
+        document.getElementById(`${mode}-panel`).classList.remove('hidden');
+      });
+    });
+
+    const questionsContainer = document.getElementById('questionsContainer');
+    const answers = {};
+    let questionTimer = null;
+    // To use this app, you need a Groq API key. Get one free at https://console.groq.com
+    const API_KEY = '';
+
+    // Transform mode
+    ideaInput.addEventListener('input', (e) => {
+      ideaCharCount.textContent = e.target.value.length;
+      const idea = e.target.value.trim();
+
+      // Clear existing timer
+      if (questionTimer) clearTimeout(questionTimer);
+
+      if (idea) {
+        // Show loading state
+        questionsContainer.innerHTML = '<div class="empty-state" style="padding: 24px 0; color: #999;">Building clarifying questions...</div>';
+        transformOutput.innerHTML = '<div class="empty-state">Answer the questions on the left to generate your prompt</div>';
+
+        answers.idea = idea;
+        answers.taskType = detectTaskType(idea);
+
+        // Wait 5 seconds before showing questions
+        questionTimer = setTimeout(() => {
+          const questions = getQuestions(answers.taskType, idea);
+          renderQuestions(questions, answers.taskType);
+        }, 5000);
+      } else {
+        questionsContainer.innerHTML = '';
+        transformOutput.innerHTML = '<div class="empty-state">Answer the questions on the left to generate your prompt</div>';
+      }
+      localStorage.setItem('ideaDraft', e.target.value);
+    });
+
+    function detectTaskType(idea) {
+      const lower = idea.toLowerCase();
+      if (/write|email|letter|article|content/.test(lower)) return 'write';
+      if (/explain|teach|understand|learn/.test(lower)) return 'explain';
+      if (/code|function|script/.test(lower)) return 'code';
+      if (/analyze|review|evaluate/.test(lower)) return 'analyze';
+      return 'general';
+    }
+
+    function getQuestions(taskType, idea) {
+      // Extract information already mentioned in the idea
+      const lower = idea.toLowerCase();
+      const hasRecipient = /to\s+(my\s+)?(boss|manager|client|team|friend|colleague|audience|reader)/i.test(lower);
+      const hasSubject = /about|regarding|on|for/.test(lower);
+      const hasLanguage = /javascript|python|java|go|typescript|react/.test(lower);
+      const hasAudience = /beginner|expert|intermediate|someone|anyone|people|audience/.test(lower);
+
+      const questions = {
+        write: [
+          ...(hasRecipient ? [] : [{
+            id: 'recipient',
+            text: 'Who are you writing to?',
+            options: ['my boss', 'a client', 'my team', 'a friend'],
+          }]),
+          {
+            id: 'concern',
+            text: 'What\'s your biggest concern?',
+            options: ['they might be upset', 'I need their approval', 'they need clarity', 'I need to persuade them'],
+          },
+          {
+            id: 'outcome',
+            text: 'What should happen after they read it?',
+            options: ['they understand', 'they take action', 'they approve something', 'they provide feedback'],
+          },
+        ],
+        explain: [
+          ...(hasAudience ? [] : [{
+            id: 'audience',
+            text: 'Who are you explaining this to?',
+            options: ['complete beginner', 'someone from another field', 'intermediate learner', 'expert in another domain'],
+          }]),
+          {
+            id: 'confusion',
+            text: 'What\'s typically the hard part?',
+            options: ['why it matters', 'how it works', 'how to use it', 'how it connects to other things'],
+          },
+          {
+            id: 'goal',
+            text: 'What\'s most important for them to get?',
+            options: ['the core concept', 'how to use it', 'why it was created', 'the practical application'],
+          },
+        ],
+        code: [
+          ...(hasLanguage ? [] : [{
+            id: 'language',
+            text: 'What language or framework?',
+            options: ['JavaScript', 'Python', 'Go', 'Java', 'React/TypeScript'],
+          }]),
+          {
+            id: 'constraint',
+            text: 'Key consideration?',
+            options: ['must be efficient', 'must handle edge cases', 'must be maintainable', 'must be secure'],
+          },
+          {
+            id: 'use',
+            text: 'What context is this for?',
+            options: ['production app', 'learning project', 'interview prep', 'internal tool'],
+          },
+        ],
+        analyze: [
+          {
+            id: 'context',
+            text: 'What\'s the background?',
+            options: ['analyzing data', 'reviewing a proposal', 'assessing a problem', 'evaluating options'],
+          },
+          {
+            id: 'finding',
+            text: 'What\'s the key insight?',
+            options: ['what surprised you', 'what matters most', 'what needs to change', 'what went wrong'],
+          },
+          {
+            id: 'action',
+            text: 'What should happen with this?',
+            options: ['make a decision', 'understand a problem', 'plan next steps', 'justify a choice'],
+          },
+        ],
+        general: [
+          {
+            id: 'why',
+            text: 'Why are you doing this?',
+            options: ['to understand', 'to create something', 'to solve a problem', 'to learn'],
+          },
+          {
+            id: 'constraint',
+            text: 'Any key constraint?',
+            options: ['keep it brief', 'be detailed', 'make it engaging', 'be technical'],
+          },
+        ],
+      };
+
+      return questions[taskType] || questions.general;
+    }
+
+    function renderQuestions(questions, taskType) {
+      questionsContainer.innerHTML = '';
+      questions.forEach(q => {
+        const div = document.createElement('div');
+        div.className = 'question-group';
+        const optionsHtml = q.options.map(opt => `
+          <button class="option-button ${answers[q.id] === opt ? 'selected' : ''}" data-question="${q.id}" data-value="${opt}">
+            ${opt}
+          </button>
+        `).join('');
+
+        div.innerHTML = `
+          <div class="question-label">${q.id.toUpperCase()}</div>
+          <div class="question-text">${q.text}</div>
+          <div class="option-group">
+            ${optionsHtml}
+          </div>
+        `;
+        questionsContainer.appendChild(div);
+
+        const buttons = div.querySelectorAll('.option-button');
+        buttons.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const qId = e.target.dataset.question;
+            const value = e.target.dataset.value;
+
+            // Deselect other buttons for this question
+            buttons.forEach(b => {
+              if (b.dataset.question === qId) {
+                b.classList.remove('selected');
+              }
+            });
+            // Select clicked button
+            e.target.classList.add('selected');
+            answers[qId] = value;
+            updatePrompt();
+          });
+        });
+      });
+    }
+
+    function updatePrompt() {
+      if (!answers.idea || !answers.taskType) return;
+
+      // Check if any question is answered (besides idea and taskType)
+      const hasAnsweredQuestion = Object.keys(answers).some(k => k !== 'idea' && k !== 'taskType' && answers[k]);
+
+      if (!hasAnsweredQuestion) {
+        transformOutput.innerHTML = '<div class="empty-state">Answer at least one question to generate your prompt</div>';
+        return;
+      }
+
+      // Generate prompt using Claude API
+      generatePromptWithClaude(answers);
+    }
+
+    async function generatePromptWithClaude(answers) {
+      transformOutput.innerHTML = '<div class="empty-state" style="color: #999;">Synthesizing your prompt...</div>';
+
+      const answersSummary = Object.entries(answers)
+        .filter(([k, v]) => k !== 'idea' && k !== 'taskType' && v)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join('\n');
+
+      // Add a relevant role based on task type
+      let roleHint = '';
+      if (answers.taskType === 'write') {
+        roleHint = 'If helpful, the prompt can invoke a specific communicator persona (e.g., "You are a skilled business communicator").';
+      } else if (answers.taskType === 'explain') {
+        roleHint = 'If helpful, the prompt can invoke a teacher or explainer persona.';
+      } else if (answers.taskType === 'code') {
+        roleHint = 'If helpful, the prompt can invoke a senior engineer persona.';
+      } else if (answers.taskType === 'analyze') {
+        roleHint = 'If helpful, the prompt can invoke an analyst or strategist persona.';
+      }
+
+      const systemPrompt = `You are a prompt engineering expert. Your job is to synthesize specific, actionable prompts based on what users tell you about their situation.
+
+Rules:
+- Never copy or repeat the user's original text
+- Make the prompt specific to THEIR situation, not generic
+- The prompt should be fresh prose, not template-like
+- It should flow naturally like one person explaining a task to another
+- Remove any generic advice and replace with specific guidance
+- Keep it concise but complete
+- ${roleHint ? roleHint + ' Only use if it genuinely fits and improves the prompt.' : ''}
+- Output ONLY the prompt itself, nothing else`;
+
+      const userPrompt = `The user wants to: ${answers.idea}
+
+Their situation:
+${answersSummary}
+
+Synthesize a specific, actionable prompt they can use with an AI. Don't reference their original text. Make it unique to their actual situation.`;
+
+      try {
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: 'groq/compound-mini',
+            max_tokens: 500,
+            temperature: 0.7,
+            messages: [
+              {
+                role: 'system',
+                content: systemPrompt,
+              },
+              {
+                role: 'user',
+                content: userPrompt,
+              },
+            ],
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          const errorMsg = data.error?.message || `HTTP ${response.status}`;
+          throw new Error(errorMsg);
+        }
+
+        if (!data.choices || !data.choices[0]) {
+          throw new Error('Invalid API response format');
+        }
+
+        const generatedPrompt = data.choices[0].message.content;
+        renderImprovedPrompt(generatedPrompt);
+      } catch (error) {
+        console.error('Error generating prompt:', error);
+        transformOutput.innerHTML = `<div class="empty-state" style="color: #dc2626;">Error: ${error.message}</div>`;
+      }
+    }
+
+    function composeFromAnswers(data) {
+      const { idea, taskType, recipient, concern, outcome, audience, confusion, goal, language, constraint, use, context, finding, action, why } = data;
+
+      if (taskType === 'write') {
+        return composeWritingPrompt(idea, recipient, concern, outcome);
+      } else if (taskType === 'explain') {
+        return composeExplainPrompt(idea, audience, confusion, goal);
+      } else if (taskType === 'code') {
+        return composeCodePrompt(idea, language, constraint, use);
+      } else if (taskType === 'analyze') {
+        return composeAnalyzePrompt(idea, context, finding, action);
+      } else {
+        return composeGenericPrompt(idea, why, constraint);
+      }
+    }
+
+    function composeWritingPrompt(idea, recipient, concern, outcome) {
+      let prompt = '';
+
+      if (concern && concern.toLowerCase().includes('upset')) {
+        prompt += `You're delivering news that won't be welcome. The challenge: be honest without losing their confidence.\n\n`;
+        prompt += `Lead with the situation itself—state it plainly and early. No apologies, no softening. Then explain what caused it. Then show your recovery plan.\n\n`;
+        prompt += `That sequence matters: honesty, awareness, competence. They need to see all three.\n\n`;
+      } else if (concern && concern.toLowerCase().includes('approval')) {
+        prompt += `You're asking for something. Make your case clear and direct.\n\n`;
+        prompt += `Start with what you want. Then explain why it makes sense—give them 2-3 reasons. Then state what happens if they say yes.\n\n`;
+        prompt += `Lead with the ask, not the rationale.\n\n`;
+      } else if (concern && concern.toLowerCase().includes('clarity')) {
+        prompt += `You're clarifying something important. Be precise and direct.\n\n`;
+        prompt += `State what you're clarifying first. Then explain the context. Then say what changes because of this clarity.\n\n`;
+      } else {
+        prompt += `You're communicating something important.\n\n`;
+        prompt += `Start with your main point. Support it with relevant details. Close with what happens next.\n\n`;
+      }
+
+      if (outcome && outcome.toLowerCase().includes('feedback')) {
+        prompt += `Invite their input, but be specific about what you need.\n\n`;
+      }
+
+      prompt += 'Professional, direct tone.';
+      return prompt.trim();
+    }
+
+    function composeExplainPrompt(idea, audience, confusion, goal) {
+      let prompt = `You're teaching something.\n\n`;
+
+      if (audience) {
+        const audienceNote = audience.includes('beginner') ? 'They have no background here.' :
+                           audience.includes('another field') ? 'They bring knowledge from a different domain.' :
+                           audience.includes('intermediate') ? 'They know the basics.' : 'They have some context.';
+        prompt += `${audienceNote} Don't oversimplify and don't assume prior knowledge—meet them where they are.\n\n`;
+      }
+
+      if (confusion) {
+        prompt += `The common stumbling block: ${confusion}. Address that head-on.\n\n`;
+      }
+
+      prompt += `Start with the absolute simplest version. Build up from there. Use analogies to things they know. `;
+
+      if (goal) {
+        prompt += `The key insight they need: ${goal}. `;
+      }
+
+      prompt += `Make it click, not just correct.\n\n`;
+      prompt += 'Patient, genuine, clear tone.';
+      return prompt.trim();
+    }
+
+    function composeCodePrompt(idea, language, constraint, use) {
+      let prompt = `Write code.\n\n`;
+
+      if (language) {
+        prompt += `Language: ${language}.\n\n`;
+      }
+
+      if (use && use.toLowerCase().includes('production')) {
+        prompt += `This is production code. Clarity and robustness matter more than elegance.\n\n`;
+      } else if (use && use.toLowerCase().includes('interview')) {
+        prompt += `This is for interview prep. Show clean thinking and good patterns.\n\n`;
+      } else if (use) {
+        prompt += `Context: ${use}.\n\n`;
+      }
+
+      prompt += `Write complete, runnable code. Include comments explaining the logic, especially anything non-obvious. `;
+
+      if (constraint && constraint.toLowerCase().includes('efficient')) {
+        prompt += `Optimize for speed. `;
+      } else if (constraint && constraint.toLowerCase().includes('edge')) {
+        prompt += `Handle edge cases thoughtfully. `;
+      } else if (constraint && constraint.toLowerCase().includes('maintainable')) {
+        prompt += `Prioritize readability. `;
+      }
+
+      prompt += `Use clear variable names.\n\n`;
+      prompt += 'Readable first.';
+      return prompt.trim();
+    }
+
+    function composeAnalyzePrompt(idea, context, finding, action) {
+      let prompt = `Analyze something.\n\n`;
+
+      if (context) {
+        prompt += `Context: ${context}.\n\n`;
+      }
+
+      prompt += `Lead with your main insight—what matters most. Then show the evidence behind it. Then explain what it means.\n\n`;
+
+      if (action && action.toLowerCase().includes('decision')) {
+        prompt += `Make the insight actionable—what should someone do with this?\n\n`;
+      } else if (action) {
+        prompt += `Be clear about what happens next based on this analysis.\n\n`;
+      }
+
+      prompt += 'Direct, honest tone.';
+      return prompt.trim();
+    }
+
+    function composeGenericPrompt(idea, why, constraint) {
+      let prompt = `Create something.\n\n`;
+      if (why) {
+        const purposeNote = why.includes('understand') ? 'The goal is clarity and insight.' :
+                          why.includes('create') ? 'The goal is building something useful.' :
+                          why.includes('solve') ? 'The goal is solving a real problem.' :
+                          'Be purposeful.';
+        prompt += `${purposeNote}\n\n`;
+      }
+      if (constraint) prompt += `Keep in mind: ${constraint}.\n\n`;
+      prompt += 'Clear, direct, intentional.';
+      return prompt.trim();
+    }
+
+    // Analyze mode
+    analyzeInput.addEventListener('input', (e) => {
+      analyzeCharCount.textContent = e.target.value.length;
+      if (e.target.value.trim()) {
+        analyzePrompt(e.target.value);
+      } else {
+        analyzeOutput.innerHTML = '<div class="empty-state">Paste a prompt above to see analysis</div>';
+      }
+      localStorage.setItem('analyzeDraft', e.target.value);
+    });
+
+
+    function renderImprovedPrompt(prompt) {
+      const html = `
+        <div class="output-section">
+          <div class="output-box">${escapeHtml(prompt)}</div>
+          <button class="copy-button" onclick="copyToClipboard(this)">Copy Prompt</button>
+        </div>
+      `;
+      transformOutput.innerHTML = html;
+    }
+
+    function analyzePrompt(text) {
+      const analysis = {
+        clarity: analyzeClarity(text),
+        specificity: analyzeSpecificity(text),
+        structure: analyzeStructure(text),
+        role: analyzeRole(text),
+      };
+
+      const score = Math.round((analysis.clarity.score + analysis.specificity.score + analysis.structure.score + analysis.role.score) / 4);
+      renderAnalysis(analysis, score);
+    }
+
+    function analyzeClarity(text) {
+      const issues = [];
+      const questionCount = (text.match(/\?/g) || []).length;
+      const lineCount = text.split('\n').filter(l => l.trim()).length;
+
+      if (questionCount > lineCount && questionCount > 2) {
+        issues.push('Multiple questions—consider grouping them');
+      }
+      if (text.trim().split(/\s+/).length < 20) {
+        issues.push('Very short—add more context');
+      }
+      return {
+        score: Math.max(0, 100 - (issues.length * 25)),
+        feedback: issues.length > 0 ? issues : ['Clear and focused'],
+        good: issues.length === 0,
+      };
+    }
+
+    function analyzeSpecificity(text) {
+      const vague = text.match(/\b(good|nice|interesting|useful|thing|maybe|sort of)\b/gi) || [];
+      const issues = [];
+      if (vague.length > 2) {
+        issues.push(`${vague.length} vague words—be more precise`);
+      }
+      if (!text.match(/\b(format|output|show|return|display|as)\b/gi)) {
+        issues.push('No output format specified');
+      }
+      return {
+        score: Math.max(0, 100 - (issues.length * 25)),
+        feedback: issues.length > 0 ? issues : ['Specific and concrete'],
+        good: issues.length === 0,
+      };
+    }
+
+    function analyzeStructure(text) {
+      const lines = text.trim().split('\n').filter(l => l.trim());
+      const issues = [];
+      if (lines.length > 1 && !text.match(/^[\d\-\*•]/gm) && lines.length > 4) {
+        issues.push('No structure—use bullets or steps');
+      }
+      return {
+        score: Math.max(0, 100 - (issues.length * 25)),
+        feedback: issues.length > 0 ? issues : ['Well-organized'],
+        good: issues.length === 0,
+      };
+    }
+
+    function analyzeRole(text) {
+      const hasRole = text.match(/\b(you are|act as|pretend|imagine|think of yourself as)\b/gi);
+      return {
+        score: hasRole ? 100 : 50,
+        feedback: hasRole ? ['Role defined'] : ['Consider starting with a role'],
+        good: !!hasRole,
+      };
+    }
+
+    function renderAnalysis(analysis, score) {
+      let html = `
+        <div class="score">
+          <div class="score-label">Clarity Score</div>
+          <div class="score-value">${score}</div>
+        </div>
+      `;
+
+      for (const [key, data] of Object.entries(analysis)) {
+        html += `<div class="output-section">`;
+        const title = key.charAt(0).toUpperCase() + key.slice(1);
+        html += `<div class="output-section-title">${title}</div>`;
+        data.feedback.forEach(f => {
+          const className = data.good ? 'good' : 'caution';
+          html += `
+            <div class="feedback-item ${className}">
+              <div class="feedback-label">${data.good ? '✓' : '→'}</div>
+              <div class="feedback-text">${f}</div>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
+
+      analyzeOutput.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function copyToClipboard(btn) {
+      const prompt = btn.previousElementSibling?.textContent || '';
+      navigator.clipboard.writeText(prompt).then(() => {
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy Prompt';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    window.copyToClipboard = copyToClipboard;
+
+    // Load drafts
+    const savedIdea = localStorage.getItem('ideaDraft');
+    if (savedIdea) {
+      ideaInput.value = savedIdea;
+      ideaCharCount.textContent = savedIdea.length;
+      const taskType = detectTaskType(savedIdea);
+      const questions = getQuestions(taskType, savedIdea);
+      renderQuestions(questions, taskType);
+      answers.idea = savedIdea;
+      answers.taskType = taskType;
+      updatePrompt();
+    }
+
+    const savedAnalyze = localStorage.getItem('analyzeDraft');
+    if (savedAnalyze) {
+      analyzeInput.value = savedAnalyze;
+      analyzeCharCount.textContent = savedAnalyze.length;
+      analyzePrompt(savedAnalyze);
+    }
+  </script>
+</body>
+</html>
